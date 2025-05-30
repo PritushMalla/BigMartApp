@@ -30,7 +30,7 @@ class inputclass:
         return entry
 
     def create_dropdown(parent, label_text, options, row, column):
-        label = ctk.CTkLabel(parent, text=label_text, font=("Arial", 14), text_color="black")
+        label = ctk.CTkLabel(parent, text=label_text, font=("Arial", 12), text_color="black")
         label.grid(row=row, column=column, sticky="w", padx=20, pady=(10, 2))
 
         dropdown = ctk.CTkOptionMenu(parent, values=options, width=250, height=35)

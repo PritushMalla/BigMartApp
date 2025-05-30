@@ -1,11 +1,14 @@
 import customtkinter as ctk
 
+
 from Orders.Addorder import AddOrder
 from Productfile.listprodcategory import ListProductCategories
 from Productfile.productform import ProductForm
 from Suppliers.addsuppliers import AddSuppliers
 from Suppliers.listsuppliers import ListSuppliers
+from profit.profitcalc import ProfitCalculator
 from sales.SalesReport import Salesreport
+from salespred import BigMartSalesApp
 from store.Liststores import ListStore
 from Productfile.addproductcategory import Addproductcategory
 
@@ -42,7 +45,9 @@ class HomeDashboard(ctk.CTk):
                    ("Add Prod category",Addproductcategory),
                    ("Product Category",ListProductCategories),
                    ("Add Order",AddOrder),
-                   ("Sales Report",Salesreport)
+                   ("Sales Report",Salesreport),
+                   ("Profit",ProfitCalculator),
+                   ("Sales Prediction",BigMartSalesApp)
                    ]
 
         for name, key in buttons:

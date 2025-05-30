@@ -22,6 +22,8 @@ class AddOrder(ctk.CTkFrame):
     ctk.set_appearance_mode("light")
     def __init__(self, parent, data_table_instance=None, initial_data=None):
         super().__init__(parent)
+        self.price = None
+        self.selling_price = None
         self.data_table_instance = data_table_instance
         self.initial_data = initial_data
         self.cart_items = []  # ✅ FIXED: Initialize cart_items
@@ -125,11 +127,14 @@ class AddOrder(ctk.CTkFrame):
 
         cursor.execute("SELECT * FROM product WHERE name = ?", (self.product_name,))
         product_data = cursor.fetchone()
+        print(product_data)
         conn.close()
 
         if product_data:
-            price = product_data[5]
+            self.costprice=product_data[4]
+            self.price = product_data[5]
             quantity = product_data[6]
+            print(quantity)
 
 
             # if not quantity.isdigit():
@@ -138,7 +143,7 @@ class AddOrder(ctk.CTkFrame):
 
             item = self.spinbox.get()
             print(item)
-            totalprice=int(item)*price
+            totalprice=int(item)*self.price
 
 
             # Check if product already in cart
@@ -147,27 +152,29 @@ class AddOrder(ctk.CTkFrame):
 
             if self.existing_item:
                 print(self.existing_item)
+                print(self.price)
 
                 # Update quantity and 'add' value
 
                 self.existing_item["add"] = int(self.existing_item["add"]) + int(item)
                 print("new existing item is ",self.existing_item["add"])
-                total = int(price) * int (self.existing_item["add"])
+                total = int(self.price) * int (self.existing_item["add"])
                 print("total is ",total)
 
 
 
                 # Also update the Treeview row
-                self.cart_tree.item(self.existing_item["item_id"], values=("⬜",self.product_name, price, quantity, self.existing_item["add"],total))
+                self.cart_tree.item(self.existing_item["item_id"], values=("⬜",self.product_name, self.price, quantity, self.existing_item["add"],total))
 
             else:
                 # Insert new item
                 item_id = self.checkbox_helper.insert_with_checkbox("", "end",
-                                                                    values=(self.product_name, price, quantity, item,totalprice))
+                                                                    values=(self.product_name, self.price, quantity, item,totalprice))
                 self.cart_items.append({
                     "item_id": item_id,
                     "name": self.product_name,
-                    "price": price,
+                    "price": self.price,
+                    "costprice" : self.costprice,
                     "quantity": quantity,
                     "add": item,
                     "Total" :totalprice
@@ -221,7 +228,7 @@ class AddOrder(ctk.CTkFrame):
                     else:
                         print(f"✅ Order is valid for {matched_item['name']}")
                         self.place_order_db(matched_item["item_id"],
-                                            matched_item["name"], matched_item["price"], matched_item["add"])
+                                            matched_item["name"], matched_item["price"], matched_item["add"],matched_item["costprice"])
                         self.clear_cart()
                         self.generate_receipt(customer_name,matched_item)
 
@@ -236,7 +243,7 @@ class AddOrder(ctk.CTkFrame):
 
 
 
-    def place_order_db(self,batch,product_name,price,quantity_toadd):
+    def place_order_db(self,batch,product_name,price,quantity_toadd,costprice):
         conn = sqlite3.connect('orders.db')
         cursor = conn.cursor()
         cursor.execute('''
@@ -245,6 +252,7 @@ class AddOrder(ctk.CTkFrame):
                 BatchNo TEXT,
                 Product_name TEXT,
                 Price TEXT,
+                Cost_Price TEXT,
                 ItemNo TEXT,
                 order_date TEXT
                 )''')
@@ -264,9 +272,9 @@ class AddOrder(ctk.CTkFrame):
             self.reduce_cart_quantity(quantity_toadd)
         else :
             cursor.execute('''
-                       INSERT INTO order_table (BatchNo,Product_name, Price, ItemNo,order_date)
-                       VALUES (?, ?, ?,?,?)
-                   ''', (batch,product_name, price, quantity_toadd,date.today()))
+                       INSERT INTO order_table (BatchNo,Product_name, Price,Cost_Price, ItemNo,order_date)
+                       VALUES (?, ?, ?,?,?,?)
+                   ''', (batch,product_name, price,costprice, quantity_toadd,date.today()))
             self.reduce_cart_quantity(quantity_toadd)
         conn.commit()
         conn.close()
@@ -343,9 +351,9 @@ class AddOrder(ctk.CTkFrame):
         total = 0
 
         name = items["name"]
-        qty = items["quantity"]
+        qty = items["add"]
         price = items["price"]
-        item_total = qty * price
+        item_total = int(qty) * int(price)
         total += item_total
         c.drawString(20, y, f"{name[:10]:<10} {qty} x {price:.2f} = {item_total:.2f}")
         y -= 12

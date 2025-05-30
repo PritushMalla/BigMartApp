@@ -20,7 +20,7 @@ class Addproductcategory(ctk.CTkFrame):
         card.place(relx=0.5, rely=0.5, anchor="center")
 
         # Header
-        header_text = "Add Product Category" if self.initial_data is None else "Update Product Category"
+        header_text = "Add Product Brand" if self.initial_data is None else "Update Product Brand"
         header = ctk.CTkLabel(card, text=header_text, font=("Helvetica", 24, "bold"), text_color="black")
         header.grid(row=0, column=0, columnspan=2, pady=(25, 10))
 
@@ -44,11 +44,11 @@ class Addproductcategory(ctk.CTkFrame):
 
 
 
-        self.productcatname=inputclass.create_input(card,"Product Category","Enter Product Category",1,0)
+        self.productcatname=inputclass.create_input(card,"Product Brand","Enter Product Brand",1,0)
         self.Date=datepicking("Added Date",3,0,4,0)
         self.Status=inputclass.create_dropdown(card,"Status",["Active","Disabled"],6,0)
         self._create_productcat_table()
-        submit_button_text = "Add Product Category" if self.initial_data is None else "Update Product Category"
+        submit_button_text = "Add Product Brand" if self.initial_data is None else "Update Product Brand"
         submit_button = ctk.CTkButton(card, text=submit_button_text, command=self.submit_prodcategory, width=200, height=40)
         submit_button.grid(row=8, column=0, columnspan=2, pady=(30, 25))
         if self.initial_data:

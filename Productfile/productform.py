@@ -12,23 +12,35 @@ from input import inputclass
 class ProductForm(ctk.CTkFrame):
     ctk.set_appearance_mode("light")
 
-    def __init__(self, parent, data_table_instance=None, initial_data=None):  # Receive DataTable instance and initial data
+    def __init__(self, parent, data_table_instance=None, initial_data=None):
+
+        # Receive DataTable instance and initial data
         super().__init__(parent)
+
         self.data_table_instance = data_table_instance
-        self.initial_data = initial_data  # Data of the product being updated
+        self.initial_data = initial_data
+        # Data of the product being updated
+
+
+
 
         # Centered card container
         card = ctk.CTkFrame(self, width=800, corner_radius=5, border_width=2, fg_color='#EAF0F1', bg_color="white")
-        card.place(relx=0.5, rely=0.5, anchor="center")
+
+        card.place(relx=0.5, rely=0.5,anchor="center" )
+
+        scrollable_frame = ctk.CTkScrollableFrame(card,width=600,height=700 ,bg_color="white" ,fg_color="#EAF0F1")
+        scrollable_frame.grid(row=0, column=0, padx=10, pady=10)
+
 
         # Header
         header_text = "Add Product" if self.initial_data is None else "Update Product"
-        header = ctk.CTkLabel(card, text=header_text, font=("Helvetica", 24, "bold"), text_color="black")
+        header = ctk.CTkLabel(scrollable_frame, text=header_text, font=("Helvetica", 24, "bold"), text_color="black")
         header.grid(row=0, column=0, columnspan=2, pady=(25, 10))
 
         # Reusable input method
         def create_input(parent, label_text, placeholder, row, column, colspan=1):
-            label = ctk.CTkLabel(parent, text=label_text, font=("Arial", 14), text_color="black")
+            label = ctk.CTkLabel(parent, text=label_text, font=("Arial", 12), text_color="black")
             label.grid(row=row, column=column, sticky="w", padx=20, pady=(10, 2))
             entry = ctk.CTkEntry(parent, placeholder_text=placeholder, width=250, height=35)
             entry.grid(row=row + 1, column=column, columnspan=colspan, padx=20, pady=(0, 10))
@@ -39,9 +51,9 @@ class ProductForm(ctk.CTkFrame):
             style.theme_use('clam')
             style.configure('Custom.DateEntry', fieldbackground='white', background='white', foreground='black',
                             bordercolor='black', lightcolor='white', darkcolor='white', arrowcolor='black')
-            date_label = ctk.CTkLabel(card, text=datename, font=("Arial", 14))
+            date_label = ctk.CTkLabel(scrollable_frame, text=datename, font=("Arial", 12))
             date_label.grid(row=rowlabelno, column=collabelno, sticky="w", padx=20, pady=(10, 2))
-            tk_container = ctk.CTkFrame(master=card, fg_color="white")
+            tk_container = ctk.CTkFrame(master=scrollable_frame, fg_color="white")
             tk_container.grid(row=rowno, column=colno, sticky="w", padx=20, pady=(10, 2))
             datepicker = DateEntry(master=tk_container, background='white', foreground='black', borderwidth=1,
                                    date_pattern='yyyy-mm-dd', style='Custom.DateEntry')
@@ -54,23 +66,37 @@ class ProductForm(ctk.CTkFrame):
         print(finalsuppliernames)
         finalcategorynames=[item[0] for item in categoryname]
         print(finalcategorynames)
+        item_type=["Snack Foods","Dairy","Fruits and Vegetables","Baking Goods","Health and Hygiene","Breads","Seafood", "Soft Drinks","Hard Drinks","Household", "Meat", "Canned","Frozen Foods","Starchy Foods",
+"Others"]
+        item_fatcontent=["Low Fat", "Regular","High Fat"]
+
+
+
 
         # Input fields
 
-        self.Batch_entry = create_input(card, "Product Batch", "Enter product name", 1, 0)
-        self.name_entry = create_input(card, "Product Name", "Enter category", 1, 1)
-        self.desc_label = ctk.CTkLabel(card, text="Product Description", font=("Arial", 14), text_color="black")
+        self.Batch_entry = create_input(scrollable_frame, "Product Batch", "Enter product name", 1, 0)
+        self.name_entry = create_input(scrollable_frame, "Product Name", "Enter category", 1, 1)
+        self.desc_label = ctk.CTkLabel(scrollable_frame, text="Product Description", font=("Arial", 12), text_color="black")
         self.desc_label.grid(row=3, column=0, columnspan=1, sticky="w", padx=20, pady=(0, 10))
-        self.desc_textbox = ctk.CTkTextbox(card, width=250, height=100, corner_radius=10)
+        self.desc_textbox = ctk.CTkTextbox(scrollable_frame, width=250, height=100, corner_radius=10)
         self.desc_textbox.grid(row=4, column=0, columnspan=1, padx=20, pady=(0, 10))
-        self.supplier = inputclass.create_dropdown(card, "Supplier", finalsuppliernames, 7, 1)
-        self.category = inputclass.create_dropdown(card, "Category", finalcategorynames, 3, 1)
+        self.supplier = inputclass.create_dropdown(scrollable_frame, "Supplier", finalsuppliernames, 7, 1)
 
-        self.cost_price = create_input(card, "Cost Price", "Enter cost", 5, 0)
-        self.sale_price = create_input(card, "Sales Price", "Enter price", 5, 1)
-        self.quantity_entry = inputclass.create_number_input(card, "Quantity", "Enter quantity", 7, 0)
-        self.mfg_date = datepicking("Manufacturing date", 9, 0, 10, 0)
-        self.exp_date = datepicking("Expiry date", 9, 1, 10, 1)
+        self.category = inputclass.create_dropdown(scrollable_frame, "Product Brand ", finalcategorynames, 3, 1),
+
+
+
+        self.cost_price = inputclass.create_number_input(scrollable_frame, "Cost Price", "Enter cost", 5, 0)
+        self.sale_price = inputclass.create_number_input(scrollable_frame, "Sales Price", "Enter price", 5, 1)
+        self.quantity_entry = inputclass.create_number_input(scrollable_frame, "Quantity", "Enter quantity", 7, 0)
+        self.product_type=inputclass.create_dropdown(scrollable_frame,"Product Type",item_type,9,0)
+        self.fatcontent=inputclass.create_dropdown(scrollable_frame,"Fat Content",item_fatcontent,9,1)
+        self.product_weight=inputclass.create_number_input(scrollable_frame,"Product Weight","Enter Weight of Product",13,0)
+
+        self.mfg_date = datepicking("Manufacturing date", 9+3, 0, 10+3, 0)
+        self.exp_date = datepicking("Expiry date", 9+3, 1, 10+3, 1)
+
 
         # Populate form if initial data is provided
         if self.initial_data:
@@ -78,8 +104,8 @@ class ProductForm(ctk.CTkFrame):
 
         # Submit button
         submit_button_text = "Add Product" if self.initial_data is None else "Update Product"
-        submit_button = ctk.CTkButton(card, text=submit_button_text, command=self.submit_data, width=200, height=40)
-        submit_button.grid(row=13, column=0, columnspan=2, pady=(30, 25))
+        submit_button = ctk.CTkButton(scrollable_frame, text=submit_button_text, command=self.submit_data, width=200, height=40)
+        submit_button.grid(row=13+3, column=0, columnspan=2, pady=(30, 25))
 
         self._create_product_table() # Ensure table exists
 
