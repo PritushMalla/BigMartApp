@@ -17,11 +17,12 @@ from checkbox import CheckboxTreeviewHelper
 from input import inputclass
 from tkinter import messagebox
 from datetime import date
-
+import pandas as pd
 class AddOrder(ctk.CTkFrame):
     ctk.set_appearance_mode("light")
     def __init__(self, parent, data_table_instance=None, initial_data=None):
         super().__init__(parent)
+        self.Customer_name_entry = None
         self.price = None
         self.selling_price = None
         self.data_table_instance = data_table_instance
@@ -38,9 +39,10 @@ class AddOrder(ctk.CTkFrame):
         self.header_label.grid(row=0, column=0, columnspan=2, pady=(25, 10))
 
         self.product_names = [item[0] for item in Listtables.product()]
-        self.Customer_name_entry = inputclass.create_input(self.order_card, "Customer Name",
-                                                           "Enter the Customer's Name", 1, 0)
-        self.select_product = inputclass.create_dropdown(self.order_card, "Products", self.product_names, 1, 1)
+ # Pass the StringVar
+
+        self.order_var = ctk.StringVar()
+        self.select_product = inputclass.create_searchable_ttk_dropdown(self.order_card, "Products", self.product_names, 1, 1,self.order_var)
 
         self.cart_tree = self.create_cart_tree(self.order_card)
         self.checkbox_helper = CheckboxTreeviewHelper(self.cart_tree)
@@ -52,7 +54,10 @@ class AddOrder(ctk.CTkFrame):
         self.quantity_label = ctk.CTkLabel(self.order_card, text="No. Of Items to Order:", font=("Arial", 12), text_color="black")
         self.quantity_label.grid(row=4, column=0, padx=20, pady=5)
 
-        self.spinbox = tk.Spinbox(self.order_card, from_=0, to=100, width=5, font=("Helvetica", 14))
+        self.spin_var = tk.IntVar(value=1)
+        self.spinbox = tk.Spinbox(self.order_card, from_=1, to=100, width=5, font=("Helvetica", 14),
+                                  textvariable=self.spin_var)
+
         self.spinbox.grid(row=4, column=0, columnspan=2)
 
         self.submit_button = ctk.CTkButton(self.order_card, text="Add  To Cart", command=self.add_to_cart, width=200,
@@ -121,7 +126,7 @@ class AddOrder(ctk.CTkFrame):
         treeview.tag_configure('evenrow', background="#f0f0f0")
 
     def add_to_cart(self):
-        conn = sqlite3.connect('myapp.db')
+        conn = sqlite3.connect('producttable.db')
         cursor = conn.cursor()
         self.product_name = self.select_product.get()
 
@@ -134,6 +139,14 @@ class AddOrder(ctk.CTkFrame):
             self.costprice=product_data[4]
             self.price = product_data[5]
             quantity = product_data[6]
+            outlet=product_data[12]
+            product_type=product_data[13]
+            product_weight=product_data[14]
+            Outletsize=product_data[15]
+            fatcontent=product_data[16]
+            outletlocation=product_data[17]
+            outlettype=product_data[18]
+
             print(quantity)
 
 
@@ -177,7 +190,20 @@ class AddOrder(ctk.CTkFrame):
                     "costprice" : self.costprice,
                     "quantity": quantity,
                     "add": item,
-                    "Total" :totalprice
+                    "Total" :totalprice,
+                    "outlet" :outlet,
+                    "prodtype":product_type,
+                    "prodweight":product_weight,
+                    "outletsize":Outletsize,
+                    "fatcontent":fatcontent,
+                    "outletlocation":outletlocation,
+                    "outlettype":outlettype
+
+
+
+
+
+
                 })
                 print("cartitems",self.cart_items)
 
@@ -209,10 +235,9 @@ class AddOrder(ctk.CTkFrame):
 
             for check in checked_items:
                 matched_item = next((item for item in self.cart_items if item["item_id"] == check), None)
-                customer_name = self.Customer_name_entry.get()
-                if not customer_name:
-                    messagebox.showerror("Error", "Please enter customer name.")
-                    return
+
+
+
                 if matched_item:
                     available = int(matched_item["quantity"])
                     requested = int(matched_item["add"])
@@ -228,9 +253,9 @@ class AddOrder(ctk.CTkFrame):
                     else:
                         print(f"✅ Order is valid for {matched_item['name']}")
                         self.place_order_db(matched_item["item_id"],
-                                            matched_item["name"], matched_item["price"], matched_item["add"],matched_item["costprice"])
+                                            matched_item["name"], matched_item["price"], matched_item["add"],matched_item["costprice"],matched_item["fatcontent"],matched_item["prodtype"],matched_item["prodweight"],matched_item["outlet"],matched_item["outletsize"],matched_item["outlettype"],matched_item["outletlocation"],matched_item["Total"])
                         self.clear_cart()
-                        self.generate_receipt(customer_name,matched_item)
+                        self.generate_receipt(matched_item)
 
 
                 else:
@@ -243,8 +268,9 @@ class AddOrder(ctk.CTkFrame):
 
 
 
-    def place_order_db(self,batch,product_name,price,quantity_toadd,costprice):
-        conn = sqlite3.connect('orders.db')
+    def place_order_db(self,batch,product_name,price,quantity_toadd,costprice
+                       ,Item_Fatcont,prod_type,prod_weight,Outlet,Outlet_Size,Outlet_Type,Outlet_Location,totalsales):
+        conn = sqlite3.connect('neworder6.db')
         cursor = conn.cursor()
         cursor.execute('''
                 CREATE TABLE IF NOT EXISTS order_table (
@@ -254,13 +280,23 @@ class AddOrder(ctk.CTkFrame):
                 Price TEXT,
                 Cost_Price TEXT,
                 ItemNo TEXT,
-                order_date TEXT
+                order_date TEXT,
+                Outlet TEXT,
+            prod_type TEXT,
+            prod_weight INT,
+            Outlet_Size TEXT,
+            Item_Fatcont TEXT,
+            Outlet_Location TEXT,
+            Outlet_Type TEXT,
+            outletyear TEXT,
+            Sales INT,
+            itemvis INT
                 )''')
 
         conn.commit()
         conn.close()
 
-        conn = sqlite3.connect('orders.db')
+        conn = sqlite3.connect('neworder6.db')
 
         cursor = conn.cursor()
         if self.product_exists(product_name):
@@ -272,9 +308,9 @@ class AddOrder(ctk.CTkFrame):
             self.reduce_cart_quantity(quantity_toadd)
         else :
             cursor.execute('''
-                       INSERT INTO order_table (BatchNo,Product_name, Price,Cost_Price, ItemNo,order_date)
-                       VALUES (?, ?, ?,?,?,?)
-                   ''', (batch,product_name, price,costprice, quantity_toadd,date.today()))
+                       INSERT INTO order_table (BatchNo,Product_name, Price,Cost_Price, ItemNo,order_date,Item_Fatcont,prod_type,prod_weight,Outlet,Outlet_Size,Outlet_Type,Outlet_Location,outletyear,Sales,itemvis)
+                       VALUES (?, ?, ?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                   ''', (batch,product_name, price,costprice, quantity_toadd,date.today(),Item_Fatcont,prod_type,prod_weight,Outlet,Outlet_Size,Outlet_Type,Outlet_Location,"2007",totalsales,0))
             self.reduce_cart_quantity(quantity_toadd)
         conn.commit()
         conn.close()
@@ -298,7 +334,7 @@ class AddOrder(ctk.CTkFrame):
         self.cart_items.clear()
         self.checkbox_helper.clear_checkboxes()
         self.total_label.configure(text="Total: $0.00")
-        self.Customer_name_entry.delete(0, tk.END)
+
         self.select_product.set("Select a product")
         self.spinbox.delete(0, tk.END)
         self.spinbox.insert(0, "0")
@@ -315,7 +351,7 @@ class AddOrder(ctk.CTkFrame):
 
         return result is not None
     def reduce_cart_quantity(self,additem):
-        conn = sqlite3.connect('myapp.db')
+        conn = sqlite3.connect('producttable.db')
         cursor = conn.cursor()
         self.product_names = self.select_product.get()
         print("productname is ",self.product_name)
@@ -324,8 +360,8 @@ class AddOrder(ctk.CTkFrame):
         conn.commit()
         conn.close()
 
-    def generate_receipt(self, customer_name, items,):
-        filename = f"invoice_{customer_name}_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
+    def generate_receipt(self, items,):
+        filename = f"invoice_{datetime.now().strftime('%Y%m%d%H%M%S')}.pdf"
         width = 3.1 * inch
         height = 10 * inch
         c = canvas.Canvas(filename, pagesize=(width, height))
@@ -341,8 +377,7 @@ class AddOrder(ctk.CTkFrame):
         c.drawString(20, y, "Phone: 555-123456")
         y -= 20
 
-        c.drawString(20, y, f"Customer: {customer_name}")
-        y -= 15
+
         c.drawString(20, y, f"Date: {datetime.now().strftime('%Y-%m-%d %H:%M')}")
         y -= 20
         c.drawString(20, y, "-" * 32)
@@ -384,4 +419,25 @@ class AddOrder(ctk.CTkFrame):
 
 
     # Windows
-
+def load_order_data(db_path="neworder6.db"):
+    conn = sqlite3.connect(db_path)
+    query = """
+    SELECT 
+        Product_name,
+        Price,
+        Cost_Price,
+        order_date,
+        Outlet,
+        prod_type,
+        prod_weight,
+        Outlet_Size,
+        Item_Fatcont,
+        Outlet_Location,
+        Outlet_Type,
+        outletyear,
+        Sales
+    FROM order_table
+    """
+    df = pd.read_sql_query(query, conn)
+    conn.close()
+    return df

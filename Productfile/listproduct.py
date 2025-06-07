@@ -21,7 +21,7 @@ class Listproduct(ctk.CTkFrame):
 
         self.configure(fg_color="white")
 
-        db_path = 'myapp.db'  # Corrected path
+        db_path = 'producttable.db'  # Corrected path
 
         # Example usage:
         product_columns = ["id","batch", "name", "description", "cost_price", "sales_price", "quantity", "supplier", "mfg_date", "exp_date","category","Status"]

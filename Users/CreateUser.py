@@ -20,9 +20,10 @@ class CreateUser(ctk.CTkFrame):
         header = ctk.CTkLabel(card, text="Add User ", font=("Helvetica", 24, "bold"), text_color="black")
         header.grid(row=1, column=0, columnspan=2, pady=(25, 10))
 
-        name_entry=inputclass.create_input(card,"FullName","Enter name",1,0)
-        username_entry=inputclass.create_input(card,"Username","Enter Username",3,0)
-        email_entry=inputclass.create_email_input(card,"E-mail","Enter Email ",5,0),
-        password_entry=inputclass.create_password_input(card,"Password","Enter Password",7,0)
-        role_entry=inputclass.create_dropdown(card,"Role",["Supplier","Admin"],9,0)
+        name_entry=inputclass.create_input(card,"FullName","Enter name",2,0)
+        username_entry=inputclass.create_input(card,"Username","Enter Username",4,0)
+        email_entry=inputclass.create_email_input(card,"E-mail","Enter Email ",6,0),
+        password_entry=inputclass.create_password_input(card,"Password","Enter Password",8,0)
+        self.role_var = ctk.StringVar()
+        role_entry=inputclass.create_dropdown(card,"Role",["Supplier","Admin"],10,0,self.role_var)
 

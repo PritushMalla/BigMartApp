@@ -25,6 +25,6 @@ class ListProductCategories(ctk.CTkFrame):
         display_category_columns=["S.No.","Product Name", "Added Date","Status"]
         self.category_table = DataTable(self, db_path, "productcat", category_columns, Addproductcategory,
                                         display_category_columns,
-                                       title="Category List",
+                                       title="Brand List",
                                        AddButtonname="Add Category")  # Removed the frame and added title
         self.category_table.pack(pady=20)

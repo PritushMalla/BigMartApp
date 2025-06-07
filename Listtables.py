@@ -240,7 +240,7 @@ def productcategory():
     return y
 
 def product():
-    conn = sqlite3.connect("myapp.db")
+    conn = sqlite3.connect("producttable.db")
     cursor = conn.cursor()
     query = f"SELECT name FROM product"
     cursor.execute(query)

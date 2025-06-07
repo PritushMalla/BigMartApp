@@ -8,9 +8,11 @@ from Suppliers.addsuppliers import AddSuppliers
 from Suppliers.listsuppliers import ListSuppliers
 from profit.profitcalc import ProfitCalculator
 from sales.SalesReport import Salesreport
+from sales.graph import Salesreportgraph
 from salespred import BigMartSalesApp
 from store.Liststores import ListStore
 from Productfile.addproductcategory import Addproductcategory
+from totalsalespred import BigMartForecastingApp
 
 # Set the appearance mode and theme
 ctk.set_appearance_mode("Light")  # Options: "System" / "Dark" / "Light"
@@ -47,7 +49,9 @@ class HomeDashboard(ctk.CTk):
                    ("Add Order",AddOrder),
                    ("Sales Report",Salesreport),
                    ("Profit",ProfitCalculator),
-                   ("Sales Prediction",BigMartSalesApp)
+                   ("Sales Prediction",BigMartSalesApp),
+                   ("Graph",Salesreportgraph),
+                   ("Sales forcast",BigMartForecastingApp)
                    ]
 
         for name, key in buttons:
@@ -63,11 +67,21 @@ class HomeDashboard(ctk.CTk):
         self.dashboard_label.pack(pady=50)
 
     def load_page(self, name):
+        if name == BigMartForecastingApp:  # Check if it's the specific app
+            # Create an instance and show it.
+            # This will open a new, independent window.
+            new_app_window = name()
+            new_app_window.mainloop()  # This will block your dashboard until closed
+            # A better approach for a new window would be:
+            # new_app_window.focus_force() # Bring it to front
+            # new_app_window.grab_set() # Make it modal (optional)
+            # self.wait_window(new_app_window) # Wait for it to close (optional)
+        else:
         # Clear existing widgets in main_frame
-        for widget in self.main_frame.winfo_children():
-            widget.destroy()
-        frame = name(self.main_frame)
-        frame.pack(fill="both", expand=True)
+            for widget in self.main_frame.winfo_children():
+                widget.destroy()
+            frame = name(self.main_frame)
+            frame.pack(fill="both", expand=True)
 
         # Display selected page name
 

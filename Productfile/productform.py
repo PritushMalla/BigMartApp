@@ -2,11 +2,12 @@ import sqlite3
 import customtkinter as ctk
 from tkcalendar import DateEntry
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 import tkinter.messagebox as tkmessagebox
 
 import Listtables
 from input import inputclass
+from datetime import datetime,timedelta
 
 
 class ProductForm(ctk.CTkFrame):
@@ -69,6 +70,10 @@ class ProductForm(ctk.CTkFrame):
         item_type=["Snack Foods","Dairy","Fruits and Vegetables","Baking Goods","Health and Hygiene","Breads","Seafood", "Soft Drinks","Hard Drinks","Household", "Meat", "Canned","Frozen Foods","Starchy Foods",
 "Others"]
         item_fatcontent=["Low Fat", "Regular","High Fat"]
+        Outlet_Identifier="OUT010"
+        Outlet_Size="High"
+        Outlet_Type="Supermarket Type 1 "
+
 
 
 
@@ -81,18 +86,27 @@ class ProductForm(ctk.CTkFrame):
         self.desc_label.grid(row=3, column=0, columnspan=1, sticky="w", padx=20, pady=(0, 10))
         self.desc_textbox = ctk.CTkTextbox(scrollable_frame, width=250, height=100, corner_radius=10)
         self.desc_textbox.grid(row=4, column=0, columnspan=1, padx=20, pady=(0, 10))
-        self.supplier = inputclass.create_dropdown(scrollable_frame, "Supplier", finalsuppliernames, 7, 1)
-
-        self.category = inputclass.create_dropdown(scrollable_frame, "Product Brand ", finalcategorynames, 3, 1),
+        self.supplier_var = ctk.StringVar()
+        self.supplier = inputclass.create_dropdown(scrollable_frame, "Supplier", finalsuppliernames, 7, 1,self.supplier_var)
+        self.category_var = ctk.StringVar()
+        self.category = inputclass.create_dropdown(scrollable_frame, "Product Brand ", finalcategorynames, 3, 1,self.category_var),
 
 
 
         self.cost_price = inputclass.create_number_input(scrollable_frame, "Cost Price", "Enter cost", 5, 0)
         self.sale_price = inputclass.create_number_input(scrollable_frame, "Sales Price", "Enter price", 5, 1)
         self.quantity_entry = inputclass.create_number_input(scrollable_frame, "Quantity", "Enter quantity", 7, 0)
-        self.product_type=inputclass.create_dropdown(scrollable_frame,"Product Type",item_type,9,0)
-        self.fatcontent=inputclass.create_dropdown(scrollable_frame,"Fat Content",item_fatcontent,9,1)
+        self.producttype_var = ctk.StringVar()
+        self.product_type=inputclass.create_dropdown(scrollable_frame,"Product Type",item_type,9,0,self.producttype_var)
+        self.fatcontentvar = ctk.StringVar()
+        self.fatcontent=inputclass.create_dropdown(scrollable_frame,"Fat Content",item_fatcontent,9,1,self.fatcontentvar)
+
         self.product_weight=inputclass.create_number_input(scrollable_frame,"Product Weight","Enter Weight of Product",13,0)
+
+        # self.Outlet_identifier_var = ctk.StringVar()
+        # self.outlet=inputclass.create_dropdown(scrollable_frame,"Fat Content",Outlet_Identifier,11,1,self.Outlet_identifier_var)
+        # self.Outlet_identifier_var = ctk.StringVar()
+        # self.outlet=inputclass.create_dropdown(scrollable_frame,"Fat Content",Outlet_Identifier,11,1,self.Outlet_identifier_var)
 
         self.mfg_date = datepicking("Manufacturing date", 9+3, 0, 10+3, 0)
         self.exp_date = datepicking("Expiry date", 9+3, 1, 10+3, 1)
@@ -110,7 +124,7 @@ class ProductForm(ctk.CTkFrame):
         self._create_product_table() # Ensure table exists
 
     def _create_product_table(self):
-        conn = sqlite3.connect('myapp.db')
+        conn = sqlite3.connect('producttable.db')
         cursor = conn.cursor()
         cursor.execute('''
         CREATE TABLE IF NOT EXISTS product (
@@ -125,7 +139,16 @@ class ProductForm(ctk.CTkFrame):
             mfg_date TEXT,
             exp_date TEXT,
             category TEXT,
-            Status TEXT
+            Status TEXT,
+            Outlet TEXT,
+            prod_type TEXT,
+            prod_weight INT,
+            Outlet_Size TEXT,
+            Item_Fatcont TEXT,
+            Outlet_Location TEXT,
+            Outlet_Type TEXT
+            
+            
             
         )
         ''')
@@ -197,23 +220,147 @@ class ProductForm(ctk.CTkFrame):
                 print("Warning: initial_data doesn't have index 10 (status)")
         else:
             print("Warning: populate_form called with no initial data.")
+
+    def validate_dates(self):
+        try:
+            mfg_str = self.mfg_date.get()
+            exp_str = self.exp_date.get()
+
+            mfg_date = datetime.strptime(mfg_str, "%Y-%m-%d")
+            exp_date = datetime.strptime(exp_str, "%Y-%m-%d")
+            today = datetime.today()
+
+            if mfg_date > today:
+                messagebox.showerror("Invalid MFG Date", "Manufacturing date cannot be in the future.")
+                return False
+
+            if exp_date <= mfg_date:
+                messagebox.showerror("Invalid EXP Date", "Expiry date must be after manufacturing date.")
+                return False
+
+            if exp_date < today:
+                messagebox.showerror("Expired Product", "Expiry date cannot be in the past.")
+                return False
+            min_shelf_life = timedelta(days=30)
+            if (exp_date - today) < min_shelf_life:
+                messagebox.showerror("Invalid Expiry Date", "Product expiry date must be at least 1 month from today.")
+                return False
+
+            shelf_life = exp_date.year - mfg_date.year
+            if shelf_life > 5:
+                messagebox.showerror("Invalid Shelf Life", "Shelf life exceeds 5 years.")
+                return False
+
+            messagebox.showinfo("Valid", "Dates are valid!")
+            return True
+
+        except ValueError:
+            messagebox.showerror("Invalid Format", "Please enter dates in YYYY-MM-DD format.")
+            return False
     def submit_data(self):
-        conn = sqlite3.connect('myapp.db')
+        batch = self.Batch_entry.get()
+        if not batch.startswith("INV-"):
+            batch = f"INV-{batch}"
+
+        batch = self.Batch_entry.get().strip()
+        name = self.name_entry.get().strip()
+        description = self.desc_textbox.get("1.0", "end").strip()
+        cost_price = self.cost_price.get().strip()
+        sale_price = self.sale_price.get().strip()
+        quantity = self.quantity_entry.get().strip()
+        supplier = self.supplier.get().strip()
+        category = self.category[0].get().strip()  # because it's a tuple
+        product_type = self.product_type.get().strip()
+        fat_content = self.fatcontent.get().strip()
+        product_weight = self.product_weight.get().strip()
+        mfg_date = self.mfg_date.get().strip()
+        exp_date = self.exp_date.get().strip()
+
+
+
+        # Check for empty fields
+        required_fields = {
+            "Batch": batch,
+            "Name": name,
+            "Cost Price": cost_price,
+            "Sale Price": sale_price,
+            "Quantity": quantity,
+            "Supplier": supplier,
+            "Category": category,
+            "Product Type": product_type,
+            "Fat Content": fat_content,
+            "Product Weight": product_weight,
+            "Mfg Date": mfg_date,
+            "Exp Date": exp_date
+        }
+
+        missing_fields = [key for key, value in required_fields.items() if not value]
+
+        if missing_fields:
+            tkmessagebox.showerror("Validation Error",
+                                   f"Please fill in the following fields:\n- " + "\n- ".join(missing_fields))
+            return
+        if not self.validate_dates():
+            # Validation failed, stop here
+            return
+
+        # Determine stock status
+        try:
+            quantity_value = int(quantity)
+        except ValueError:
+            tkmessagebox.showerror("Invalid Input", "Quantity must be a number.")
+            return
+        if (int(quantity))<=0:
+            tkmessagebox.showerror("Invalid Input", "Quantity must be greater than 0 ")
+            return
+        if (int(cost_price))<=0:
+            tkmessagebox.showerror("Invalid Input", "Cost Price must be greater than 0 ")
+            return
+        if (int(sale_price))<=0:
+            tkmessagebox.showerror("Invalid Input", "Selling price  must be greater than 0 ")
+            return
+
+
+        status = "Out of Stock" if quantity_value < 1 else "In Stock"
+
+        # Prepare data for database
+        data = (
+        batch, name, description, cost_price, sale_price, quantity, supplier, mfg_date, exp_date, category, status,fat_content,product_type,product_weight,)
+
+        conn = sqlite3.connect('producttable.db')
         cursor = conn.cursor()
         quantity=int(self.quantity_entry.get())
         status = "Out of Stock" if  quantity< 1 else "In Stock"
+        Outlet_Identifier="OUT010"
+        Outlet_Size="High"
+        Outlet_Type="Supermarket Type 1 "
+        Outlet_Location="Tier 1"
         data = (
             self.Batch_entry.get(), self.name_entry.get(), self.desc_textbox.get("1.0", "end"),
             self.cost_price.get(), self.sale_price.get(), self.quantity_entry.get(),
-            self.supplier.get(), self.mfg_date.get(), self.exp_date.get(),self.category.get(),status
+            self.supplier.get(), self.mfg_date.get(), self.exp_date.get(),self.category[0].get(),status,self.fatcontent.get(),self.product_type.get(),self.product_weight.get(),Outlet_Identifier,Outlet_Size,Outlet_Type,Outlet_Location
         )
+        # Status
+        # TEXT,
+        # Outlet
+        # TEXT,
+        # prod_type
+        # TEXT
+        # Outlet_Size
+        # TEXT,
+        # Item_Fatcont
+        # TEXT,
+        # Outlet_Location
+        # TEXT,
+        # Outlet_Type
+        # TEXT
 
         if self.initial_data:  # It's an update
             product_id = self.initial_data[0]
             cursor.execute('''
                 UPDATE product SET
                     batch=?, name=?, description=?, cost_price=?, sales_price=?,
-                    quantity=?, supplier=?, mfg_date=?, exp_date=?,category=?,Status=?
+                    quantity=?, supplier=?, mfg_date=?, exp_date=?,category=?,Status=?,Item_Fatcont=?,prod_type=?,prod_weight=?,Outlet=?,Outlet_Size=?,Outlet_Type=?,Outlet_Location=?,
                 WHERE id=?
             ''', (*data, product_id))
             conn.commit()
@@ -225,8 +372,9 @@ class ProductForm(ctk.CTkFrame):
         else:  # It's a new product
             cursor.execute('''
                 INSERT INTO product (
-                    batch, name, description, cost_price, sales_price, quantity, supplier, mfg_date, exp_date,category,Status
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?)
+                    batch, name, description, cost_price, sales_price, quantity, supplier, mfg_date, exp_date,category,Status,
+                    Item_Fatcont,prod_type,prod_weight,Outlet,Outlet_Size,Outlet_Type,Outlet_Location
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?,?,?,?)
             ''', data)
             conn.commit()
             conn.close()

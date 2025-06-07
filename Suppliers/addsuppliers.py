@@ -65,6 +65,28 @@ class AddSuppliers(ctk.CTkFrame):
                 print("Warning: initial_data doesn't have enough elements.")
 
     def submit_suppliers(self):
+        supplier_name = self.suppliername_entry.get().strip()
+        product_name = self.productname_entry.get().strip()
+        supplier_email = self.supplieremail_entry.get().strip()
+        supplier_phone = self.supplierphone_entry.get().strip()
+        supplier_address = self.supplieraddress_entry.get().strip()
+
+        # -------- VALIDATION --------
+        if not all([supplier_name, product_name, supplier_email, supplier_phone, supplier_address]):
+            messagebox.showerror("Validation Error", "All fields are required.")
+            return
+
+        if not supplier_phone.isdigit() or len(supplier_phone) < 7 or len(supplier_phone) > 15:
+            messagebox.showerror("Validation Error", "Phone number must be digits only and between 7 to 15 digits.")
+            return
+
+        if '@' not in supplier_email or '.' not in supplier_email.split('@')[-1]:
+            messagebox.showerror("Validation Error", "Invalid email format.")
+            return
+
+        # Prepare data tuple
+        data = (supplier_name, product_name, supplier_email, supplier_phone, supplier_address)
+
         conn = sqlite3.connect('supplier.db')
         cursor = conn.cursor()
         data = (

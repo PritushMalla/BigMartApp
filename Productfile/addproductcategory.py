@@ -46,7 +46,8 @@ class Addproductcategory(ctk.CTkFrame):
 
         self.productcatname=inputclass.create_input(card,"Product Brand","Enter Product Brand",1,0)
         self.Date=datepicking("Added Date",3,0,4,0)
-        self.Status=inputclass.create_dropdown(card,"Status",["Active","Disabled"],6,0)
+        self.status_var = ctk.StringVar()
+        self.Status=inputclass.create_dropdown(card,"Status",["Active","Disabled"],6,0,self.status_var)
         self._create_productcat_table()
         submit_button_text = "Add Product Brand" if self.initial_data is None else "Update Product Brand"
         submit_button = ctk.CTkButton(card, text=submit_button_text, command=self.submit_prodcategory, width=200, height=40)
@@ -77,15 +78,24 @@ class Addproductcategory(ctk.CTkFrame):
             except IndexError:
                 print("Warning: initial_data doesn't have enough elements.")
     def submit_prodcategory(self):
+        product_name = self.productcatname.get().strip()
+        added_date = self.Date.get().strip()
+        status = self.Status.get().strip()
+
+        # Validation checks
+        if not product_name:
+            messagebox.showerror("Input Error", "Please enter a Product Brand name.")
+            return
+        if not added_date:
+            messagebox.showerror("Input Error", "Please select a date.")
+            return
+        if status not in ["Active", "Disabled"]:
+            messagebox.showerror("Input Error", "Please select a valid status.")
+            return
+
         conn = sqlite3.connect('productcategory.db')
         cursor = conn.cursor()
-        data = (
-            self.productcatname.get(),
-            self.Date.get(),
-            self.Status.get()
-
-
-        )
+        data = (product_name, added_date, status)
         if self.initial_data:
             productcat_id = self.initial_data[0]
             cursor.execute('''

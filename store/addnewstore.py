@@ -29,7 +29,8 @@ class AddStore(ctk.CTkFrame):
         self.number_entry = inputclass.create_number_input(card,"Store Phone Number","Enter Phone Number",6,0)
         self.location_entry = inputclass.create_input(card,"Store Location","Enter Location ",8,0)
         self.status_options = ["Open","Close"]
-        self.status_entry = inputclass.create_dropdown(card,"Status",self.status_options,10,0)
+        self.status_var = ctk.StringVar()
+        self.status_entry = inputclass.create_dropdown(card,"Status",self.status_options,10,0,self.status_var)
 
         # Populate form if initial data is provided
         if self.initial_data:
@@ -69,7 +70,40 @@ class AddStore(ctk.CTkFrame):
             except IndexError:
                 print("Warning: initial_data doesn't have enough elements.")
 
+    def validate_inputs(self):
+        name = self.name_entry.get().strip()
+        manager = self.manager_entry.get().strip()
+        phone = self.number_entry.get().strip()
+        location = self.location_entry.get().strip()
+        status = self.status_entry.get().strip()
+
+        if not name:
+            messagebox.showerror("Validation Error", "Store Name cannot be empty.")
+            return False
+        if not manager:
+            messagebox.showerror("Validation Error", "Manager Name cannot be empty.")
+            return False
+        if not phone:
+            messagebox.showerror("Validation Error", "Phone Number cannot be empty.")
+            return False
+        if not phone.isdigit():
+            messagebox.showerror("Validation Error", "Phone Number must contain only digits.")
+            return False
+        if len(phone) < 7 or len(phone) > 15:
+            messagebox.showerror("Validation Error", "Phone Number length must be between 7 and 15 digits.")
+            return False
+        if not location:
+            messagebox.showerror("Validation Error", "Store Location cannot be empty.")
+            return False
+        if status not in self.status_options:
+            messagebox.showerror("Validation Error", "Please select a valid Store Status.")
+            return False
+        return True
+
     def submit_store(self):
+        if not self.validate_inputs():
+            return
+
         conn = sqlite3.connect('store.db')
         cursor = conn.cursor()
         data = (
